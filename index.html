@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0c0e12">
+<title>角色扮演</title>
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ========== 侧栏：存档列表 ========== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>角色扮演</span>
+      </div>
+      <button class="icon-btn" id="btnCloseSidebar" title="收起">✕</button>
+    </div>
+
+    <button class="new-chat" id="btnNewChat">
+      <span class="plus">＋</span>
+      <span>新建对话</span>
+    </button>
+
+    <div class="session-list" id="sessionList"></div>
+
+    <div class="sidebar-foot">
+      <button class="ghost-btn" id="btnImport">导入</button>
+      <button class="ghost-btn" id="btnSettings">设置</button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ========== 主区 ========== -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="btnMenu" title="存档">☰</button>
+      <div class="title-wrap">
+        <h1 id="chatTitle">未开始</h1>
+        <div class="sub" id="chatSub"></div>
+      </div>
+      <div class="top-actions">
+        <button class="pill" id="btnLength" title="回复字数（点一下切换）">中</button>
+        <button class="pill active" id="btnThought" title="显示 / 隐藏心理描写">心理</button>
+        <button class="icon-btn" id="btnMore" title="更多">⋯</button>
+      </div>
+    </header>
+
+    <div class="messages" id="messages"></div>
+
+    <footer class="composer">
+      <div class="composer-inner">
+        <textarea id="input" rows="1" placeholder="说点什么…"></textarea>
+        <button class="send-btn" id="btnSend" title="发送">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+      <div class="composer-hint">Enter 发送 · Shift + Enter 换行</div>
+    </footer>
+  </main>
+</div>
+
+<!-- ========== 设定弹窗 ========== -->
+<div class="modal" id="setupModal">
+  <div class="modal-card">
+    <button class="modal-x" id="btnSetupX" title="关闭（不会保存）">✕</button>
+    <h2>开始一段对话</h2>
+    <p class="modal-desc">写好人设和情境，之后的一切都按它来。</p>
+
+    <div class="grid-2">
+      <label class="field">
+        <span>角色名</span>
+        <input id="fChar" type="text" placeholder="比如：沈砚" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>我的名字</span>
+        <input id="fUser" type="text" placeholder="留空则用「我」" autocomplete="off">
+      </label>
+    </div>
+
+    <label class="field">
+      <span>角色设定 <em>性格、身份、说话方式、和我的关系</em></span>
+      <textarea id="fPersona" rows="4" placeholder="比如：三十岁，市一中美高部的化学老师。说话慢，喜欢用比喻，从不大声。表面温和，其实控制欲很强。"></textarea>
+    </label>
+
+    <label class="field">
+      <span>情境 / 背景 <em>现在是什么时间、在哪、发生了什么</em></span>
+      <textarea id="fScenario" rows="3" placeholder="比如：放学后的实验室，只剩我们两个人。窗外在下雨，他把门反锁了。"></textarea>
+    </label>
+
+    <label class="field">
+      <span>开场白 <em>可留空，留空就由你说第一句</em></span>
+      <textarea id="fOpening" rows="2" placeholder="留空则由你直接开口"></textarea>
+    </label>
+
+    <div class="modal-actions">
+      <button class="ghost-btn" id="btnSetupCancel">取消</button>
+      <button class="primary-btn" id="btnSetupStart">开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 设置弹窗 ========== -->
+<div class="modal" id="settingsModal">
+  <div class="modal-card">
+    <h2>设置</h2>
+
+    <label class="field">
+      <span>DeepSeek API Key</span>
+      <div class="input-row">
+        <input id="fKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        <button class="ghost-btn" id="btnToggleKey" type="button">显示</button>
+      </div>
+      <small>只保存在这台设备的浏览器里，不会上传，也不会进代码。</small>
+    </label>
+
+    <div class="grid-2">
+      <label class="field">
+        <span>模型</span>
+        <select id="fModel">
+          <option value="deepseek-chat">deepseek-chat（快）</option>
+          <option value="deepseek-reasoner">deepseek-reasoner（深思）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>温度 <em id="tempVal">0.9</em></span>
+        <input id="fTemp" type="range" min="0" max="1.5" step="0.1" value="0.9">
+      </label>
+    </div>
+
+    <div class="grid-2">
+      <label class="field">
+        <span>自定模式上限（token）</span>
+        <input id="fMaxTokens" type="number" min="100" max="8000" step="100" value="800">
+      </label>
+      <label class="field">
+        <span>携带上下文条数</span>
+        <input id="fCtx" type="number" min="2" max="200" step="2" value="24">
+      </label>
+    </div>
+
+    <label class="field">
+      <span>字号 <em id="fontVal">100%</em></span>
+      <input id="fFont" type="range" min="85" max="135" step="5" value="100">
+    </label>
+
+    <details class="advanced">
+      <summary>高级：系统提示词模板</summary>
+      <p class="muted small">可用占位符：<code>{{char}}</code> <code>{{user}}</code> <code>{{persona}}</code> <code>{{scenario}}</code></p>
+      <textarea id="fPrompt" rows="10" spellcheck="false"></textarea>
+      <button class="ghost-btn small-btn" id="btnResetPrompt">恢复默认</button>
+    </details>
+
+    <div class="modal-actions">
+      <button class="ghost-btn" id="btnSettingsClose">关闭</button>
+      <button class="primary-btn" id="btnSettingsSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 确认弹窗 ========== -->
+<div class="modal" id="confirmModal">
+  <div class="modal-card narrow">
+    <h3 id="confirmTitle">确认</h3>
+    <p class="modal-desc" id="confirmText"></p>
+    <div class="modal-actions">
+      <button class="ghost-btn" id="btnConfirmNo">取消</button>
+      <button class="danger-btn" id="btnConfirmYes">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 存档操作小菜单 ========== -->
+<div class="ctx-menu" id="ctxMenu"></div>
+
+<!-- ========== 顶部更多菜单 ========== -->
+<div class="ctx-menu" id="moreMenu"></div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileImport" accept=".json,application/json" hidden>
+
+<script src="app.js?v=2" defer></script>
+</body>
+</html>
