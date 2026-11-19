@@ -2,6 +2,8 @@
 
 一个纯静态的沉浸式角色扮演对话页。黑白极简界面，接 DeepSeek API，数据全在本地，扔到 GitHub Pages 就能用，手机上也能开。
 
+**线上地址：<https://yangyaxin420.github.io/roleplay-chat/>**
+
 ---
 
 ## 功能
